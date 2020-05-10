@@ -20,4 +20,10 @@ From this, I will have made additions and modifications including refactorings a
 
 ## Details
 
-TBA
+## Current Status
+
+The server builds successfully, however the broswer throws an 'invalid HTTP Response' error when attempting to load the default index.html.
+
+## Next Steps
+
+Get the response working (current returning a byte NetworkStream) and then refactor the response functions.
