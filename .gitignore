@@ -1,2 +1,11 @@
 source/DemoServer/bin/*
 source/DemoServer/obj/*
+source/Tests/bin/*
+source/Tests/obj/*
+
+*.dll
+*.sou
+*.v2
+source/.idea/*
+source/.vs/*
+*.cache
