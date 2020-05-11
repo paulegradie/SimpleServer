@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.IO;
 using System.Net;
+using System.Net.Http;
 using System.Net.Sockets;
 using System.Threading;
 
@@ -61,8 +62,8 @@ namespace DemoServer
             Console.WriteLine("Request: \n" + msg);
             Console.WriteLine("------------------------------");
 
-            Requests req = Requests.GetRequests(msg);
-            Response res = Response.From(req);
+            var req = Requests.GetRequests(msg);
+            var res = Response.From(req);
             res.Post(client.GetStream());
 
         }

@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
+using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Net.Sockets;
 
 
@@ -21,51 +23,58 @@ namespace DemoServer
         }
 
 
-        public static Response From(Requests request)
+        public static HttpResponseMessage From(Requests request)
         {
-            if (request == null)
-            {
-                return MakeNullRequest();
-            }
-            if (request.URL == null)
-            {
-                return MakeNullRequest();
-            }
-            else if (request.Type == "GET")
-            {
-                // this is where my database interface will go.
-                string file = Environment.CurrentDirectory + HTTPServer.WEB_DIR + request.URL;
-                FileInfo f = new FileInfo(file);
-
-                if (f.Exists && f.Extension.Contains("."))
-                {
-                    Console.WriteLine("Sending a Response!");
-                    var response = MakeFromFile(f);
-                    Console.WriteLine("========= RESPONSE ==========");
-                    Console.WriteLine(response);
-                    Console.WriteLine("========= RESPONSE END ==========");
-
-                    return response;
-                }
-                else
-                {
-                    DirectoryInfo di = new DirectoryInfo(f + "/");
-                    FileInfo[] files = di.GetFiles();
-                    foreach (FileInfo ff in files)
-                    {
-                        string n = ff.Name;
-                        if (n.Contains("default.html") || n.Contains("default.htm") || n.Contains("index.htm") ||
-                            n.Contains("index.html"))
-                            MakeFromFile(ff);
-                    }
-
-                }
-            }
-           
-            else             
-                return MakeNotAllowedResponse();
+            //
+            var resp = new HttpResponseMessage();
+            resp.Content = new StringContent("<div> THIS IS IT BIATCH</div>");
+            resp.Content.Headers.ContentType = new MediaTypeHeaderValue("text/html");
+            return resp;
+            //
             
-            return MakePageNotFound();
+            // if (request == null)
+            // {
+            //     return MakeNullRequest();
+            // }
+            // if (request.URL == null)
+            // {
+            //     return MakeNullRequest();
+            // }
+            // else if (request.Type == "GET")
+            // {
+            //     // this is where my database interface will go.
+            //     string file = Environment.CurrentDirectory + HTTPServer.WEB_DIR + request.URL;
+            //     FileInfo f = new FileInfo(file);
+            //
+            //     if (f.Exists && f.Extension.Contains("."))
+            //     {
+            //         Console.WriteLine("Sending a Response!");
+            //         var response = MakeFromFile(f);
+            //         Console.WriteLine("========= RESPONSE ==========");
+            //         Console.WriteLine(response);
+            //         Console.WriteLine("========= RESPONSE END ==========");
+            //
+            //         return response;
+            //     }
+            //     else
+            //     {
+            //         DirectoryInfo di = new DirectoryInfo(f + "/");
+            //         FileInfo[] files = di.GetFiles();
+            //         foreach (FileInfo ff in files)
+            //         {
+            //             string n = ff.Name;
+            //             if (n.Contains("default.html") || n.Contains("default.htm") || n.Contains("index.htm") ||
+            //                 n.Contains("index.html"))
+            //                 MakeFromFile(ff);
+            //         }
+            //
+            //     }
+            // }
+            //
+            // else             
+            //     return MakeNotAllowedResponse();
+            //
+            // return MakePageNotFound();
 
         }
 
