@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.IO;
 using System.Net.Sockets;
+using System.Text;
 
 
 namespace DemoServer
@@ -76,6 +77,7 @@ namespace DemoServer
             var d = new byte[fs.Length];
             reader.Read(d, 0, d.Length);
             fs.Close();
+            
             return new Response("200 OK", "text/html", d);
             
         }
@@ -122,14 +124,16 @@ namespace DemoServer
         public void Post(NetworkStream stream)
         {
             StreamWriter writer = new StreamWriter(stream);
-            writer.Flush();
             var header = string.Format(format: "{0} {1}\r\nServer: {2}\r\nContent-Type: {3}\r\nAccept-Ranges: bytes\r\nContent-Length: {4}\r\n", HTTPServer.VERSION, status, HTTPServer.NAME, mime, data.Length);
             Console.WriteLine(header);
 
             // this is the header
             writer.WriteLine(header);
+            writer.Flush();
+            
             // body
             stream.Write(data, 0, data.Length);
+            writer.Flush();
         }
     }
 }
