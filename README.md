@@ -1,4 +1,4 @@
-## Simple Server in C
+## Simple Server in C#
 
 This project implements a simple HTTP/1.1 server in C#.
 
