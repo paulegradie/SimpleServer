@@ -9,8 +9,7 @@ namespace DemoServer
 {
     class HTTPServer
     {
-
-        public const string MSG_DIR = "/root/msg/";
+        public const string ERROR_DIR = "/root/error_pages/";
         public const string WEB_DIR = "/root/web/";
         public const string VERSION = "HTTP/1.1";
         public const string NAME = "DemoServer";
@@ -36,35 +35,58 @@ namespace DemoServer
             Console.WriteLine("Got to the run command");
             while (is_alive)
             {
-                Console.WriteLine("Waiting for a request connection..." );
+                Console.WriteLine("Waiting for a request connection...");
 
                 TcpClient client = listener.AcceptTcpClient();
 
                 HandleClient(client);
                 client.Close();
             }
+
             is_alive = false;
             listener.Stop();
         }
 
         private void HandleClient(TcpClient client)
         {
-            StreamReader reader = new StreamReader(client.GetStream());
-
+  
+            using var reader = new StreamReader(client.GetStream());
             string msg = "";
             while (reader.Peek() != -1)
             {
-                msg += reader.ReadLine() + "\n";
+                msg += reader.ReadLine() + "\r\n";
             }
+            var splitRequest = msg.Split(new []{Environment.NewLine}, StringSplitOptions.None);
+                
+            var request = ProcessRequest(splitRequest);
+            var response = Response.GenerateResponse(request);
+            SendResponse(client.GetStream(), response);
+        }
 
-            Console.WriteLine("------------------------------\n");
-            Console.WriteLine("Request: \n" + msg);
-            Console.WriteLine("------------------------------");
+        private static Request ProcessRequest(string[] request)
+        {
+            if (request.Length == 0)
+                return null;
 
-            Requests req = Requests.GetRequests(msg);
-            Response res = Response.From(req);
-            res.Post(client.GetStream());
+            var meta = RequestParser.ParseRequest(request);
+            return new Request(meta.RequestType, meta.URL, meta.HostName);
+        }
 
+        private void SendResponse(NetworkStream stream, Response response)
+        {
+            using var writer = new StreamWriter(stream);
+            var header =
+                string.Format(
+                    format:
+                    "{0} {1}\r\nServer: {2}\r\nContent-Type: {3}\r\nAccept-Ranges: bytes\r\nContent-Length: {4}\r\n",
+                    HTTPServer.VERSION, response.Status, HTTPServer.NAME, response.Mime, response.Data.Length);
+
+            // this is the header
+            writer.WriteLine(header);
+            writer.Flush();
+
+            // body
+            stream.Write(response.Data, 0, response.Data.Length);
         }
     }
 }

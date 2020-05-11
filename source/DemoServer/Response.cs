@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Net.Sockets;
@@ -10,27 +11,26 @@ namespace DemoServer
     class Response
     {
 
-        private byte[] data = null;
-        private string status;
-        private string mime;
-
+        public byte[] Data { get;  }
+        public string Status { get;  }
+        public string Mime { get; }
+        
         private Response(string status, string mime, byte[] data)
         {
-            this.data = data;
-            this.mime = mime;
-            this.status = status;
+            Data = data;
+            Mime = mime;
+            Status = status;
         }
 
-
-        public static Response From(Requests request)
+        public static Response GenerateResponse(Request request)
         {
             if (request == null)
             {
-                return MakeNullRequest();
+                return MakeErrorResponse("400.html", "400 Bad Request", "text/html");
             }
             if (request.URL == null)
             {
-                return MakeNullRequest();
+                return MakeErrorResponse("400.html", "400 Bad Request", "text/html");
             }
             else if (request.Type == "GET")
             {
@@ -40,12 +40,7 @@ namespace DemoServer
 
                 if (f.Exists && f.Extension.Contains("."))
                 {
-                    Console.WriteLine("Sending a Response!");
                     var response = MakeFromFile(f);
-                    Console.WriteLine("========= RESPONSE ==========");
-                    Console.WriteLine(response);
-                    Console.WriteLine("========= RESPONSE END ==========");
-
                     return response;
                 }
                 else
@@ -64,9 +59,9 @@ namespace DemoServer
             }
            
             else             
-                return MakeNotAllowedResponse();
+                return MakeErrorResponse("405.html", "405 Bad Request", "text/html");
             
-            return MakePageNotFound();
+            return MakeErrorResponse("404.html", "404 Bad Request", "text/html");
 
         }
 
@@ -82,58 +77,23 @@ namespace DemoServer
             
         }
 
-        private static Response MakeNullRequest()
+        private static Response MakeErrorResponse(string filename, string status, string mime)
         {
-            string file = Environment.CurrentDirectory + HTTPServer.MSG_DIR + "400.html";
-            Console.WriteLine(file);
-            FileInfo fi = new FileInfo(file);
-            FileStream fs = fi.OpenRead();
-            BinaryReader reader = new BinaryReader(fs);
-            byte[] d = new byte[fs.Length];
-            reader.Read(d, 0, d.Length);
-            fs.Close();
-            return new Response("400 Bad Request", "text/html", d);
-        }
-        private static Response MakePageNotFound()
-        {
-            string file = Environment.CurrentDirectory + HTTPServer.MSG_DIR + "404.html";
-            Console.WriteLine(file);
-            FileInfo fi = new FileInfo(file);
-            FileStream fs = fi.OpenRead();
-            BinaryReader reader = new BinaryReader(fs);
-            byte[] d = new byte[fs.Length];
-            reader.Read(d, 0, d.Length);
-            fs.Close();
-            return new Response("404 Bad Request", "text/html", d);
-        }
+            var filepath = string.Join("",
+                new List<string> {Environment.CurrentDirectory, HTTPServer.ERROR_DIR, filename});
+            var file = new FileInfo(filepath);
 
-        private static Response MakeNotAllowedResponse()
-        {
-            string file = Environment.CurrentDirectory + HTTPServer.MSG_DIR + "405.html";
-            Console.WriteLine(file);
-            FileInfo fi = new FileInfo(file);
-            FileStream fs = fi.OpenRead();
-            BinaryReader reader = new BinaryReader(fs);
-            byte[] d = new byte[fs.Length];
-            reader.Read(d, 0, d.Length);
-            fs.Close();
-            return new Response("405 Bad Request", "text/html", d);
-        }
-
-
-        public void Post(NetworkStream stream)
-        {
-            StreamWriter writer = new StreamWriter(stream);
-            var header = string.Format(format: "{0} {1}\r\nServer: {2}\r\nContent-Type: {3}\r\nAccept-Ranges: bytes\r\nContent-Length: {4}\r\n", HTTPServer.VERSION, status, HTTPServer.NAME, mime, data.Length);
-            Console.WriteLine(header);
-
-            // this is the header
-            writer.WriteLine(header);
-            writer.Flush();
+            using var dataStream = file.OpenRead();
+            var fileSize = (int)dataStream.Length;
             
-            // body
-            stream.Write(data, 0, data.Length);
-            writer.Flush();
+            var reader = new BinaryReader(dataStream);
+            var buffer = new byte[fileSize];
+
+            reader.Read(buffer, 0, fileSize);
+            return new Response(status, mime, buffer);
+
         }
+        
+      
     }
 }

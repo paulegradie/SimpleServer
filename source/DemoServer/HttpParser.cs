@@ -6,35 +6,23 @@ namespace DemoServer
 {
     public class RequestParser
     {
-        // the request parser will ultimately return an HttpBody struct which will provide access to the request body via property getters
         public RequestParser() { }
-
-        public RequestMeta ParseRequest(string request)
+        public static RequestMeta ParseRequest(string[] lines)
         {
-
-            var parsedRequest = parseRequest(request);
-
-            return parsedRequest;
-        }
-
-        private static RequestMeta parseRequest(string request)
-        {
-
             Dictionary<string, string> KeyValues = new Dictionary<string, string>();
-
-            string[] lines = request.Split("\n");
-            for (int i = 0; i < lines.Length; i++)
+            for (var i = 0; i < lines.Length; i++)
             {
                 if (lines[i] != "")
                 {
                     AddHeaderData(KeyValues, lines, i);
-                } else
+                }
+                else
                 {
-                    for (int x = i+1; x < lines.Length; x++)
+                    for (var x = i + 1; x < lines.Length; x++)
                     {
                         AddBodyData(KeyValues, lines, x);
-
                     }
+
                     break;
                 }
             };
@@ -47,7 +35,6 @@ namespace DemoServer
             KeyValues.TryGetValue("protocol", out string protocol);
 
             return new RequestMeta(url, hostname, port, requestType, contentType, protocol, KeyValues);
-
         }
 
         private static void AddBodyData(Dictionary<string, string> keyValues, string[] lines, int i)
@@ -60,41 +47,29 @@ namespace DemoServer
 
         private static void AddHeaderData(Dictionary<string, string> KeyValues, string[] lines, int i)
         {
-            string key;
-            string value;
-
             if (i == 0)
             {
                 var main = lines[i].Split(" ");
                 KeyValues.Add("request-type", main[0]);
-
-                if (main[1] == "/")
-                {
-                    KeyValues.Add("url", "index.html");
-                } else
-                {
-                    KeyValues.Add("url", main[1]);
-                }
-
+                KeyValues.Add("url", main[1] == "/" ? "index.html" : main[1]);
                 KeyValues.Add("protocol", main[2]);
             }
             else
             {
-
-                key = lines[i].Split(": ")[0];
-                value = lines[i].Split(": ")[1];
+                var key = lines[i].Split(": ")[0];
+                var value = lines[i].Split(": ")[1];
 
                 if (key == "host" | key == "Host")
                 {
-                    string[] kv = value.Split(":");
+                    var kv = value.Split(":");
                     KeyValues.Add("hostname", kv[0]);
                     KeyValues.Add("port", kv[1]);
-
                 }
                 else if (key == "content-type" | key == "Content-Type")
                 {
                     KeyValues.Add("content-type", value);
-                } else
+                }
+                else
                 {
                     KeyValues.Add(key, value);
                 }
