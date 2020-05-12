@@ -22,8 +22,12 @@ From this, I will have made additions and modifications including refactorings a
 
 ## Current Status
 
-The server builds successfully, however the broswer throws an 'invalid HTTP Response' error when attempting to load the default index.html.
+The server builds successfully and serves a simple webpage. ;)
 
 ## Next Steps
 
-Get the response working (current returning a byte NetworkStream) and then refactor the response functions.
+ - Refactor the response and request objects and figure out why StreamReader.ReadToEnd doesn't work as expected.
+ - Link up the get request with a postgress db (later sql server db proper) and display some dummy data
+ - Modify the front end to accept text and update the db
+ - Provide a means to request updated data and specific data from the db
+ - Handle alternative request types
